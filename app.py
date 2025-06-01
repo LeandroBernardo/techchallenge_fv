@@ -6,6 +6,7 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 
 def train_models():
@@ -13,7 +14,7 @@ def train_models():
         df = pd.read_csv('insurance.csv')
     except FileNotFoundError:
         st.error("Erro: Arquivo 'insurance.csv' não encontrado no diretório.")
-        return None, None, None, None, None, None, None, 0, 0, 0, 0, 0, 0
+        return None, None, None, None, None, None, None, None, 0, 0, 0, 0, 0, 0, 0, 0
     
     df = df.drop_duplicates()
     
@@ -36,10 +37,12 @@ def train_models():
     lr = LinearRegression()
     dt = DecisionTreeRegressor(random_state=42)
     rf = RandomForestRegressor(random_state=42, n_estimators=100)
+    knn = KNeighborsRegressor(n_neighbors=5)
     
     lr.fit(X_train, y_train)
     dt.fit(X_train, y_train)
     rf.fit(X_train, y_train)
+    knn.fit(X_train, y_train)
     
     def evaluate_model(model, X_test, y_test):
         y_pred = model.predict(X_test)
@@ -50,16 +53,15 @@ def train_models():
     lr_rmse, lr_r2 = evaluate_model(lr, X_test, y_test)
     dt_rmse, dt_r2 = evaluate_model(dt, X_test, y_test)
     rf_rmse, rf_r2 = evaluate_model(rf, X_test, y_test)
+    knn_rmse, knn_r2 = evaluate_model(knn, X_test, y_test)
     
-    return lr, dt, rf, scaler, le_sex, le_smoker, le_region, lr_rmse, lr_r2, dt_rmse, dt_r2, rf_rmse, rf_r2
+    return lr, dt, rf, knn, scaler, le_sex, le_smoker, le_region, lr_rmse, lr_r2, dt_rmse, dt_r2, rf_rmse, rf_r2, knn_rmse, knn_r2
 
-
-lr, dt, rf, scaler, le_sex, le_smoker, le_region, lr_rmse, lr_r2, dt_rmse, dt_r2, rf_rmse, rf_r2 = train_models()
-
+# Atualizar a chamada para incluir o KNN
+lr, dt, rf, knn, scaler, le_sex, le_smoker, le_region, lr_rmse, lr_r2, dt_rmse, dt_r2, rf_rmse, rf_r2, knn_rmse, knn_r2 = train_models()
 
 if lr is None:
     st.stop()
-
 
 st.title("Previsão de Custos de Seguro de Saúde")
 st.write("Insira os dados abaixo para prever o custo do seguro usando diferentes modelos de Machine Learning.")
@@ -90,8 +92,8 @@ if st.button("Prever Custo do Seguro"):
     lr_pred = lr.predict(input_data)[0]
     dt_pred = dt.predict(input_data)[0]
     rf_pred = rf.predict(input_data)[0]
+    knn_pred = knn.predict(input_data)[0]
     
-
     col1, col2 = st.columns([1, 1])  
     
     with col1:
@@ -99,8 +101,8 @@ if st.button("Prever Custo do Seguro"):
         st.write(f"**Regressão Linear**: ${lr_pred:.2f}")
         st.write(f"**Árvore de Decisão**: ${dt_pred:.2f}")
         st.write(f"**Random Forest**: ${rf_pred:.2f}")
+        st.write(f"**K-Nearest Neighbors**: ${knn_pred:.2f}")
     
-
     st.markdown(
         """
         <style>
@@ -123,3 +125,4 @@ if st.button("Prever Custo do Seguro"):
         st.write(f"**Regressão Linear** - RMSE: {lr_rmse:.2f}, R²: {lr_r2:.4f}")
         st.write(f"**Árvore de Decisão** - RMSE: {dt_rmse:.2f}, R²: {dt_r2:.4f}")
         st.write(f"**Random Forest** - RMSE: {rf_rmse:.2f}, R²: {rf_r2:.4f}")
+        st.write(f"**K-Nearest Neighbors** - RMSE: {knn_rmse:.2f}, R²: {knn_r2:.4f}")
